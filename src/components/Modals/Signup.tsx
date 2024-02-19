@@ -1,18 +1,64 @@
 import { authModalState } from "@/atoms/authModalAtom";
-import React from "react";
+import { auth } from "@/firebase/firebase";
+import React, { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
+import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
+import { useRouter } from "next/router";
 
 type SignupProps = {};
 
 const Signup: React.FC<SignupProps> = () => {
   const setAuthModalState = useSetRecoilState(authModalState);
 
+  const [inputs, setInputs] = useState({
+    email: "",
+    displayName: "",
+    password: "",
+  });
+
+  const router = useRouter();
+
+  const [createUserWithEmailAndPassword, user, loading, error] =
+    useCreateUserWithEmailAndPassword(auth);
+
   const handleClick = () => {
     setAuthModalState((prev) => ({ ...prev, type: "login" }));
   };
 
+  const handleChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputs((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!inputs.email || !inputs.displayName || !inputs.password) {
+      return alert("Please fill all fields.");
+    }
+
+    try {
+      const newUser = await createUserWithEmailAndPassword(
+        inputs.email,
+        inputs.password
+      );
+
+      if (!newUser) return;
+
+      router.push("/");
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (error) alert(error.message);
+  }, [error]);
+
   return (
-    <form className="space-y-6 px-6 pb-4">
+    <form className="space-y-6 px-6 pb-4" onSubmit={handleRegister}>
       <h3 className="text-xl font-medium text-white">Register to CodeArena</h3>
 
       <div>
@@ -28,6 +74,7 @@ const Signup: React.FC<SignupProps> = () => {
           id="email"
           className="border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
           placeholder="name@company.com"
+          onChange={handleChangeInput}
         />
       </div>
 
@@ -44,6 +91,7 @@ const Signup: React.FC<SignupProps> = () => {
           id="displayName"
           className="border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
           placeholder="Test Name"
+          onChange={handleChangeInput}
         />
       </div>
 
@@ -55,11 +103,12 @@ const Signup: React.FC<SignupProps> = () => {
           Password
         </label>
         <input
-          type="passsword"
+          type="password"
           name="password"
           id="password"
           className="border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
           placeholder="********"
+          onChange={handleChangeInput}
         />
       </div>
       <button
@@ -68,7 +117,7 @@ const Signup: React.FC<SignupProps> = () => {
               text-sm py-2.5 text-center bg-brand-orange hover:bg-brand-orange-s
           "
       >
-        Register
+        {loading ? "Registering..." : "Register"}
       </button>
       <div className="text-sm font-medium text-gray-300">
         Already have an account?{" "}

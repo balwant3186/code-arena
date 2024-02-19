@@ -1,5 +1,8 @@
 import { authModalState } from "@/atoms/authModalAtom";
-import React from "react";
+import { auth } from "@/firebase/firebase";
+import { useRouter } from "next/router";
+import React, { useEffect, useState } from "react";
+import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useSetRecoilState } from "recoil";
 
 type LoginProps = {};
@@ -7,12 +10,51 @@ type LoginProps = {};
 const Login: React.FC<LoginProps> = () => {
   const setAuthModalState = useSetRecoilState(authModalState);
 
+  const [inputs, setInputs] = useState({
+    email: "",
+    password: "",
+  });
+
+  const router = useRouter();
+
+  const [signInWithEmailAndPassword, user, loading, error] =
+    useSignInWithEmailAndPassword(auth);
+
   const handleClick = (type: "login" | "register" | "forgotPassword") => {
     setAuthModalState((prev) => ({ ...prev, type }));
   };
 
+  const handleChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputs((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!inputs.email || !inputs.password)
+      return alert("Please fill all fields");
+
+    try {
+      const user = await signInWithEmailAndPassword(
+        inputs.email,
+        inputs.password
+      );
+      if (!user) return;
+      router.push("/");
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  useEffect(() => {
+    if (error) alert(error.message);
+  }, [error]);
+
   return (
-    <form className="space-y-6 px-6 pb-4">
+    <form className="space-y-6 px-6 pb-4" onSubmit={handleSubmit}>
       <h3 className="text-xl font-medium text-white">Sign in to CodeArena</h3>
 
       <div>
@@ -28,6 +70,7 @@ const Login: React.FC<LoginProps> = () => {
           id="email"
           className="border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
           placeholder="name@company.com"
+          onChange={handleChangeInput}
         />
       </div>
 
@@ -39,11 +82,12 @@ const Login: React.FC<LoginProps> = () => {
           Your Password
         </label>
         <input
-          type="passsword"
+          type="password"
           name="password"
           id="password"
           className="border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white"
           placeholder="********"
+          onChange={handleChangeInput}
         />
       </div>
       <button
@@ -52,7 +96,7 @@ const Login: React.FC<LoginProps> = () => {
                 text-sm py-2.5 text-center bg-brand-orange hover:bg-brand-orange-s
             "
       >
-        Log In
+        {loading ? "Loading..." : "Log In"}
       </button>
       <button className="flex w-full justify-end">
         <a
