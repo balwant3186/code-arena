@@ -42,7 +42,9 @@ const ProblemsTable: React.FC<ProblemsTableProps> = () => {
           return (
             <tr
               key={problem.id}
-              className={`${index % 2 === 0 ? "" : "bg-dark-layer-1"}`}
+              className={`text-gray-400 ${
+                index % 2 === 0 ? "" : "bg-dark-layer-1"
+              }`}
             >
               <td className="px-2 py-4 font-medium whitespace-nowrap text-dark-green-s">
                 <BsCheckCircle fontSize={18} width={18} />
