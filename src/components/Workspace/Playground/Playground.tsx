@@ -47,15 +47,18 @@ const Playground: React.FC<PlaygroundProps> = ({ problem }) => {
           <div className="flex">
             {/* Cases */}
             {problem?.examples.map((problem, index) => (
-              <div
-                className="mr-2 items-start mt-2 text-white"
-                key={problem.id}
-              >
+              <div className="mr-2 items-start mt-2" key={problem.id}>
                 <div
                   className="flex flex-wrap items-center gap-y-4"
                   onClick={() => setActiveTestCaseIdx(index)}
                 >
-                  <div className="font-medium items-center transition-all focus:outline-none inline-flex bg-dark-fill-3 hover:bg-dark-fill-2 relative rounded-lg px-4 py-1 cursor-pointer whitespace-nowrap">
+                  <div
+                    className={`font-medium items-center transition-all focus:outline-none inline-flex bg-dark-fill-3 hover:bg-dark-fill-2 relative rounded-lg px-4 py-1 cursor-pointer whitespace-nowrap ${
+                      activeTestCaseIdx === index
+                        ? "text-white"
+                        : "text-gray-500"
+                    }`}
+                  >
                     Case {index + 1}
                   </div>
                 </div>
