@@ -1,16 +1,47 @@
 import Topbar from "@/components/Topbar/Topbar";
 import Workspace from "@/components/Workspace/Workspace";
+import { problems } from "@/utils/problems";
+import { Problem } from "@/utils/types/problem";
 import React from "react";
 
-type ProblemPageProps = {};
+type ProblemPageProps = {
+  problem: Problem;
+};
 
-const ProblemPage: React.FC<ProblemPageProps> = () => {
+const ProblemPage: React.FC<ProblemPageProps> = ({ problem }) => {
+  console.log("pro", problem);
   return (
     <div>
       <Topbar problemPage />
 
-      <Workspace />
+      <Workspace problem={problem} />
     </div>
   );
 };
 export default ProblemPage;
+
+export async function getStaticProps({ params }: { params: { pid: string } }) {
+  const { pid } = params;
+
+  const problem = problems[pid];
+
+  if (!problem)
+    return {
+      notFound: true,
+    };
+
+  problem.handlerFunction = problem.handlerFunction.toString();
+
+  return {
+    props: {
+      problem,
+    },
+  };
+}
+export async function getStaticPaths() {
+  const paths = Object.keys(problems).map((problem) => ({
+    params: { pid: problem },
+  }));
+
+  return { paths, fallback: false };
+}
