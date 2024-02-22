@@ -1,18 +1,24 @@
-import { problems } from "@/mockProblems/problems";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { AiFillYoutube } from "react-icons/ai";
 import { BsCheckCircle } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
 import YouTube from "react-youtube";
+import useGetProblems from "@/hooks/useGetProblem";
 
-type ProblemsTableProps = {};
+type ProblemsTableProps = {
+  setLoadingProblems: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-const ProblemsTable: React.FC<ProblemsTableProps> = () => {
+const ProblemsTable: React.FC<ProblemsTableProps> = ({
+  setLoadingProblems,
+}) => {
   const [youtubePlayer, setYoutubePlayer] = useState({
     isOpen: false,
     videoId: "",
   });
+
+  const problems = useGetProblems(setLoadingProblems);
 
   const handleClose = () => setYoutubePlayer({ isOpen: false, videoId: "" });
 
@@ -50,12 +56,23 @@ const ProblemsTable: React.FC<ProblemsTableProps> = () => {
                 <BsCheckCircle fontSize={18} width={18} />
               </td>
               <td className="px-6 py-4">
-                <Link
-                  href={`/problems/${problem.id}`}
-                  className="hover:text-blue-600 cursor-pointer"
-                >
-                  {problem.title}
-                </Link>
+                {problem.link ? (
+                  <Link
+                    href={problem.link}
+                    className="hover:text-blue-600 cursor-pointer"
+                    target="_blank"
+                    referrerPolicy="no-referrer"
+                  >
+                    {problem.title}
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/problems/${problem.id}`}
+                    className="hover:text-blue-600 cursor-pointer"
+                  >
+                    {problem.title}
+                  </Link>
+                )}
               </td>
               <td className={`px-6 py-4 ${difficulty}`}>
                 {problem.difficulty}

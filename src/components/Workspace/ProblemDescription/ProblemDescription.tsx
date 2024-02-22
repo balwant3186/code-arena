@@ -1,3 +1,7 @@
+import CircleSkeleton from "@/components/Skeletons/CircleSkeleton";
+import RectangleSkeleton from "@/components/Skeletons/RectangleSkeleton";
+import useGetCurrentProblem from "@/hooks/useGetCurrentProblem";
+import useGetUserDataOnProblem from "@/hooks/useGetUserDataOnProblem";
 import { Problem } from "@/utils/types/problem";
 import Image from "next/image";
 import { AiFillLike, AiFillDislike } from "react-icons/ai";
@@ -9,6 +13,13 @@ type ProblemDescriptionProps = {
 };
 
 const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ problem }) => {
+  const { currentProblem, loading, problemDifficultyClasses } =
+    useGetCurrentProblem(problem.id);
+
+  const { liked, dislike, solved, starred, setData } = useGetUserDataOnProblem(
+    problem.id
+  );
+
   return (
     <div className="bg-dark-layer-1">
       {/* TAB */}
@@ -31,27 +42,40 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ problem }) => {
                 {problem.title}
               </div>
             </div>
-            <div className="flex items-center mt-3">
-              <div
-                className={`text-olive bg-olive inline-block rounded-[21px] bg-opacity-[.15] px-2.5 py-1 text-xs font-medium capitalize `}
-              >
-                Easy
+
+            {!loading && currentProblem && (
+              <div className="flex items-center mt-3">
+                <div
+                  className={`${problemDifficultyClasses} inline-block rounded-[21px] bg-opacity-[.15] px-2.5 py-1 text-xs font-medium capitalize `}
+                >
+                  {currentProblem.difficulty}
+                </div>
+                <div className="rounded p-[3px] ml-3 text-lg transition-colors duration-200 text-green-s text-dark-green-s">
+                  <BsCheck2Circle />
+                </div>
+                <div className="flex items-center cursor-pointer hover:bg-dark-fill-3 space-x-1 rounded p-[3px] ml-3 text-lg transition-colors duration-200 text-dark-gray-6">
+                  <AiFillLike />
+                  <span className="text-xs">{currentProblem.likes}</span>
+                </div>
+                <div className="flex items-center cursor-pointer hover:bg-dark-fill-3 space-x-1 rounded p-[3px] ml-3 text-lg transition-colors duration-200 text-green-s text-dark-gray-6">
+                  <AiFillDislike />
+                  <span className="text-xs">{currentProblem.dislikes}</span>
+                </div>
+                <div className="cursor-pointer hover:bg-dark-fill-3 rounded p-[3px] ml-3 text-xl transition-colors duration-200 text-green-s text-dark-gray-6 ">
+                  <TiStarOutline />
+                </div>
               </div>
-              <div className="rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-green-s text-dark-green-s">
-                <BsCheck2Circle />
+            )}
+
+            {loading && (
+              <div className="mt-3 flex space-x-2">
+                <RectangleSkeleton />
+                <CircleSkeleton />
+                <RectangleSkeleton />
+                <RectangleSkeleton />
+                <CircleSkeleton />
               </div>
-              <div className="flex items-center cursor-pointer hover:bg-dark-fill-3 space-x-1 rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-dark-gray-6">
-                <AiFillLike />
-                <span className="text-xs">120</span>
-              </div>
-              <div className="flex items-center cursor-pointer hover:bg-dark-fill-3 space-x-1 rounded p-[3px] ml-4 text-lg transition-colors duration-200 text-green-s text-dark-gray-6">
-                <AiFillDislike />
-                <span className="text-xs">2</span>
-              </div>
-              <div className="cursor-pointer hover:bg-dark-fill-3  rounded p-[3px]  ml-4 text-xl transition-colors duration-200 text-green-s text-dark-gray-6 ">
-                <TiStarOutline />
-              </div>
-            </div>
+            )}
 
             {/* Problem Statement(paragraphs) */}
             <div className="text-white text-sm">
