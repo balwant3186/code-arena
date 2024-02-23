@@ -5,6 +5,7 @@ import { BsCheckCircle } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
 import YouTube from "react-youtube";
 import useGetProblems from "@/hooks/useGetProblem";
+import useGetSolvedProblems from "@/hooks/useGetSolvedProblems";
 
 type ProblemsTableProps = {
   setLoadingProblems: React.Dispatch<React.SetStateAction<boolean>>;
@@ -19,6 +20,8 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({
   });
 
   const problems = useGetProblems(setLoadingProblems);
+
+  const solvedProblems = useGetSolvedProblems();
 
   const handleClose = () => setYoutubePlayer({ isOpen: false, videoId: "" });
 
@@ -53,7 +56,9 @@ const ProblemsTable: React.FC<ProblemsTableProps> = ({
               }`}
             >
               <td className="px-2 py-4 font-medium whitespace-nowrap text-dark-green-s">
-                <BsCheckCircle fontSize={18} width={18} />
+                {solvedProblems?.includes(problem.id) && (
+                  <BsCheckCircle fontSize={18} width={18} />
+                )}
               </td>
               <td className="px-6 py-4">
                 {problem.link ? (
