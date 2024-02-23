@@ -6,7 +6,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 const useGetUserDataOnProblem = (problemId: string) => {
   const [data, setData] = useState({
     liked: false,
-    dislike: false,
+    disliked: false,
     starred: false,
     solved: false,
   });
@@ -29,7 +29,7 @@ const useGetUserDataOnProblem = (problemId: string) => {
 
         setData({
           liked: likedProblems.includes(problemId),
-          dislike: dislikedProblems.includes(problemId),
+          disliked: dislikedProblems.includes(problemId),
           starred: starredProblems.includes(problemId),
           solved: solvedProblems.includes(problemId),
         });
@@ -41,7 +41,7 @@ const useGetUserDataOnProblem = (problemId: string) => {
     return () => {
       setData({
         liked: false,
-        dislike: false,
+        disliked: false,
         starred: false,
         solved: false,
       });
