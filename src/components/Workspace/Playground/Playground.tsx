@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/router";
 import { problems } from "@/utils/problems";
 import { arrayUnion, doc, updateDoc } from "firebase/firestore";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 type PlaygroundProps = {
   problem: Problem;
@@ -19,20 +20,33 @@ type PlaygroundProps = {
   setSolved: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+export interface ISettings {
+  fontSize: string;
+  settingsModalIsOpen: boolean;
+  dropdownIsOpen: boolean;
+}
+
 const Playground: React.FC<PlaygroundProps> = ({
   problem,
   setSuccess,
   setSolved,
 }) => {
   const [activeTestCaseIdx, setActiveTestCaseIdx] = useState<number>(0);
-
-  const [user] = useAuthState(auth);
+  const [fontSize, setFontSize] = useLocalStorage("fontSize", "16px");
 
   let [userCode, setUserCode] = useState<string>(problem.starterCode);
+
+  const [settings, setSettings] = useState<ISettings>({
+    fontSize: fontSize,
+    settingsModalIsOpen: false,
+    dropdownIsOpen: false,
+  });
 
   const {
     query: { pid },
   } = useRouter();
+
+  const [user] = useAuthState(auth);
 
   useEffect(() => {
     const code = localStorage.getItem(`code-${pid}`);
@@ -79,6 +93,7 @@ const Playground: React.FC<PlaygroundProps> = ({
           });
 
           setSolved(true);
+          setSuccess(true);
         }
       }
     } catch (error: any) {
@@ -110,7 +125,7 @@ const Playground: React.FC<PlaygroundProps> = ({
 
   return (
     <div className="flex flex-col bg-dark-layer-1 relative overflow-x-hidden">
-      <PreferenceNav />
+      <PreferenceNav settings={settings} setSettings={setSettings} />
 
       <Split
         className="h-[calc(100vh-94px)]"
@@ -123,7 +138,7 @@ const Playground: React.FC<PlaygroundProps> = ({
             value={userCode}
             theme={vscodeDark}
             extensions={[javascript()]}
-            style={{ fontSize: 16 }}
+            style={{ fontSize: settings.fontSize }}
             onChange={handleChange}
           />
         </div>
