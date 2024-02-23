@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import PreferenceNav from "./PreferenceNav/PreferenceNav";
 import Split from "react-split";
 import ReactCodeMirror from "@uiw/react-codemirror";
@@ -6,13 +6,107 @@ import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { javascript } from "@codemirror/lang-javascript";
 import EditorFooter from "./EditorFooter/EditorFooter";
 import { Problem } from "@/utils/types/problem";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, firestore } from "@/firebase/firebase";
+import { toast } from "react-toastify";
+import { useRouter } from "next/router";
+import { problems } from "@/utils/problems";
+import { arrayUnion, doc, updateDoc } from "firebase/firestore";
 
 type PlaygroundProps = {
   problem: Problem;
+  setSuccess: React.Dispatch<React.SetStateAction<boolean>>;
+  setSolved: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const Playground: React.FC<PlaygroundProps> = ({ problem }) => {
+const Playground: React.FC<PlaygroundProps> = ({
+  problem,
+  setSuccess,
+  setSolved,
+}) => {
   const [activeTestCaseIdx, setActiveTestCaseIdx] = useState<number>(0);
+
+  const [user] = useAuthState(auth);
+
+  let [userCode, setUserCode] = useState<string>(problem.starterCode);
+
+  const {
+    query: { pid },
+  } = useRouter();
+
+  useEffect(() => {
+    const code = localStorage.getItem(`code-${pid}`);
+    if (user) {
+      setUserCode(code ? JSON.parse(code) : problem.starterCode);
+    } else {
+      setUserCode(problem.starterCode);
+    }
+  }, [pid, problem.starterCode, user]);
+
+  const handleSubmit = async () => {
+    if (!user) {
+      toast.error("Please login to submit your code", {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "dark",
+      });
+      return;
+    }
+
+    try {
+      userCode = userCode.slice(userCode.indexOf(problem.starterFunctionName));
+
+      const cb = new Function(`return ${userCode}`)();
+
+      const handler = problems[pid as string].handlerFunction;
+
+      if (typeof handler === "function") {
+        const result = handler(cb);
+
+        if (result) {
+          toast.success("Congrats! All tests passed!", {
+            position: "top-center",
+            autoClose: 3000,
+            theme: "dark",
+          });
+
+          setTimeout(() => setSuccess(false), 4000);
+
+          const userRef = doc(firestore, "users", user.uid);
+
+          await updateDoc(userRef, {
+            solvedProblems: arrayUnion(problem.id),
+          });
+
+          setSolved(true);
+        }
+      }
+    } catch (error: any) {
+      if (
+        error.message.startsWith(
+          "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal"
+        )
+      ) {
+        toast.error("Oops! One or more test cases failed", {
+          position: "top-center",
+          autoClose: 3000,
+          theme: "dark",
+        });
+      } else {
+        toast.error(error.message, {
+          position: "top-center",
+          autoClose: 3000,
+          theme: "dark",
+        });
+      }
+    }
+  };
+
+  const handleChange = (value: string) => {
+    setUserCode(value);
+
+    localStorage.setItem(`code-${pid}`, JSON.stringify(value));
+  };
 
   return (
     <div className="flex flex-col bg-dark-layer-1 relative overflow-x-hidden">
@@ -26,10 +120,11 @@ const Playground: React.FC<PlaygroundProps> = ({ problem }) => {
       >
         <div className="w-full overflow-auto">
           <ReactCodeMirror
-            value={problem.starterCode}
+            value={userCode}
             theme={vscodeDark}
             extensions={[javascript()]}
             style={{ fontSize: 16 }}
+            onChange={handleChange}
           />
         </div>
 
@@ -80,7 +175,7 @@ const Playground: React.FC<PlaygroundProps> = ({ problem }) => {
         </div>
       </Split>
 
-      <EditorFooter />
+      <EditorFooter handleSubmit={handleSubmit} />
     </div>
   );
 };

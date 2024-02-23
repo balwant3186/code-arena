@@ -25,9 +25,13 @@ import { toast } from "react-toastify";
 
 type ProblemDescriptionProps = {
   problem: Problem;
+  _solved: boolean;
 };
 
-const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ problem }) => {
+const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
+  problem,
+  _solved,
+}) => {
   const {
     currentProblem,
     setCurrentProblem,
@@ -253,7 +257,7 @@ const ProblemDescription: React.FC<ProblemDescriptionProps> = ({ problem }) => {
                 >
                   {currentProblem.difficulty}
                 </div>
-                {solved && (
+                {(solved || _solved) && (
                   <div className="rounded p-[3px] ml-3 text-lg transition-colors duration-200 text-green-s text-dark-green-s">
                     <BsCheck2Circle />
                   </div>
